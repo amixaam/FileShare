@@ -1,4 +1,4 @@
-### A simple file server written in Go
+### FileShare
 
 This is a simple file server written in Go. It serves files from a specified directory and provides a simple web interface for browsing and downloading files.
 
