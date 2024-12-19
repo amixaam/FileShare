@@ -20,18 +20,23 @@ jobs:
                     - os: windows
                       arch: amd64
                       extension: .exe
+                      release_name: windows
                     - os: darwin
                       arch: amd64
                       extension: ""
+                      release_name: macos
                     - os: darwin
                       arch: arm64
                       extension: ""
+                      release_name: macos
                     - os: linux
                       arch: amd64
                       extension: ""
+                      release_name: linux
                     - os: linux
                       arch: arm64
                       extension: ""
+                      release_name: linux
 
         steps:
             - uses: actions/checkout@v4
@@ -46,13 +51,13 @@ jobs:
                   GOOS: ${{ matrix.os }}
                   GOARCH: ${{ matrix.arch }}
               run: |
-                  output_name="FileShare-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.extension }}"
+                  output_name="FileShare-${{ matrix.release_name }}-${{ matrix.arch }}${{ matrix.extension }}"
                   go build -v -o "$output_name" main.go
                   # Create ZIP archive
                   if [ "${{ matrix.os }}" = "windows" ]; then
-                    zip "FileShare-${{ matrix.os }}-${{ matrix.arch }}.zip" "$output_name"
+                    zip "FileShare-${{ matrix.release_name }}-${{ matrix.arch }}.zip" "$output_name"
                   else
-                    tar czf "FileShare-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" "$output_name"
+                    tar czf "FileShare-${{ matrix.release_name }}-${{ matrix.arch }}.tar.gz" "$output_name"
                   fi
 
             - name: Create Release
@@ -69,7 +74,7 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
                   if [ "${{ matrix.os }}" = "windows" ]; then
-                    gh release upload "${GITHUB_REF#refs/tags/}" "FileShare-${{ matrix.os }}-${{ matrix.arch }}.zip"
+                    gh release upload "${GITHUB_REF#refs/tags/}" "FileShare-${{ matrix.release_name }}-${{ matrix.arch }}.zip"
                   else
-                    gh release upload "${GITHUB_REF#refs/tags/}" "FileShare-${{ matrix.os }}-${{ matrix.arch }}.tar.gz"
+                    gh release upload "${GITHUB_REF#refs/tags/}" "FileShare-${{ matrix.release_name }}-${{ matrix.arch }}.tar.gz"
                   fi

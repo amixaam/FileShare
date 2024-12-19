@@ -2,6 +2,10 @@
 
 This is a simple file server written in Go. It serves files from a specified directory and provides a simple web interface for browsing and downloading files.
 
+### Installation
+
+Install the exetuable by downloading the latest release from the [releases page](https://github.com/amixaam/FileShare/releases/).
+
 ### Usage
 
 To use the file server, you need to specify the directory to serve files from. By default, the server will serve files from the `~/SharedFiles` directory. You can specify a different directory using the `-dir` flag.
