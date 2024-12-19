@@ -3,49 +3,73 @@
 
 name: FileShare
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    push:
+        tags:
+            - "v*" # Trigger on version tags
+    workflow_dispatch: # Allow manual trigger
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - os: windows
-            arch: amd64
-            extension: .exe
-          - os: darwin
-            arch: amd64
-            extension: ""
-          - os: darwin
-            arch: arm64
-            extension: ""
-          - os: linux
-            arch: amd64
-            extension: ""
-          - os: linux
-            arch: arm64
-            extension: ""
+    release:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write # Needed for creating releases
 
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.23'
-    
-    - name: Build
-      env:
-        GOOS: ${{ matrix.os }}
-        GOARCH: ${{ matrix.arch }}
-      run: go build -v -o FileShare${{ matrix.extension }} main.go
-    
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: FileShare-${{ matrix.os }}-${{ matrix.arch }}
-        path: FileShare${{ matrix.extension }}
+        strategy:
+            matrix:
+                include:
+                    - os: windows
+                      arch: amd64
+                      extension: .exe
+                    - os: darwin
+                      arch: amd64
+                      extension: ""
+                    - os: darwin
+                      arch: arm64
+                      extension: ""
+                    - os: linux
+                      arch: amd64
+                      extension: ""
+                    - os: linux
+                      arch: arm64
+                      extension: ""
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Go
+              uses: actions/setup-go@v4
+              with:
+                  go-version: "1.23"
+
+            - name: Build
+              env:
+                  GOOS: ${{ matrix.os }}
+                  GOARCH: ${{ matrix.arch }}
+              run: |
+                  output_name="FileShare-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.extension }}"
+                  go build -v -o "$output_name" main.go
+                  # Create ZIP archive
+                  if [ "${{ matrix.os }}" = "windows" ]; then
+                    zip "FileShare-${{ matrix.os }}-${{ matrix.arch }}.zip" "$output_name"
+                  else
+                    tar czf "FileShare-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" "$output_name"
+                  fi
+
+            - name: Create Release
+              if: matrix.os == 'linux' && matrix.arch == 'amd64' # Only create release once
+              id: create_release
+              uses: softprops/action-gh-release@v1
+              with:
+                  draft: false
+                  prerelease: false
+                  generate_release_notes: true
+
+            - name: Upload Release Assets
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  if [ "${{ matrix.os }}" = "windows" ]; then
+                    gh release upload "${GITHUB_REF#refs/tags/}" "FileShare-${{ matrix.os }}-${{ matrix.arch }}.zip"
+                  else
+                    gh release upload "${GITHUB_REF#refs/tags/}" "FileShare-${{ matrix.os }}-${{ matrix.arch }}.tar.gz"
+                  fi
