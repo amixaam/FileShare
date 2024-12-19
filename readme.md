@@ -28,6 +28,8 @@ PORT=8000 ./fileshare
 -   Displays file sizes in human-readable format
 -   Displays total size of directory
 -   Displays local IP addresses for easy copy and paste to other devices
+-   Column sorting for file listing
+-   Dark / light mode toggle
 
 ### Screenshots
 
