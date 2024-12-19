@@ -2,7 +2,6 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
 name: FileShare
-
 on:
   push:
     branches: [ "main" ]
@@ -10,16 +9,43 @@ on:
     branches: [ "main" ]
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: windows
+            arch: amd64
+            extension: .exe
+          - os: darwin
+            arch: amd64
+            extension: ""
+          - os: darwin
+            arch: arm64
+            extension: ""
+          - os: linux
+            arch: amd64
+            extension: ""
+          - os: linux
+            arch: arm64
+            extension: ""
+
     steps:
     - uses: actions/checkout@v4
-
+    
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.23'
-
+    
     - name: Build
-      run: go build -v ./...
+      env:
+        GOOS: ${{ matrix.os }}
+        GOARCH: ${{ matrix.arch }}
+      run: go build -v -o FileShare${{ matrix.extension }} main.go
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: FileShare-${{ matrix.os }}-${{ matrix.arch }}
+        path: FileShare${{ matrix.extension }}
