@@ -1,0 +1,16 @@
+# FileShare Configuration
+# must be within the same directory as the executable and named as fileshare.yaml, or set a custom name and path with the -config flag
+
+# Refer to the readme.md file for more information
+
+# Directory to serve. Absolute path or relative to the executable.
+# directory: ./
+
+# Port to listen on. default: "8080"
+port: "8080"
+
+# Show or hide hiden files or directories. default: true (show)
+dotfiles: true
+
+# Domain to use for links. default: localhost
+domain: localhost

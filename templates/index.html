@@ -2,21 +2,15 @@
 <html>
 	<head>
 		<title>File Server</title>
+		<!-- <meta name="viewport" content="width=device-width, initial-scale=1.0" /> -->
 		<link rel="stylesheet" href="/static/css/index.css" />
 		<script>
+			// Theme handling
+			// Theme handling
 			function setTheme(theme) {
 				document.documentElement.setAttribute("data-theme", theme);
 				localStorage.setItem("theme", theme);
-				updateThemeToggleText();
-			}
-
-			function getSystemTheme() {
-				return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-			}
-
-			function initializeTheme() {
-				const savedTheme = localStorage.getItem("theme");
-				setTheme(savedTheme || getSystemTheme());
+				updateThemeToggle();
 			}
 
 			function toggleTheme() {
@@ -24,67 +18,61 @@
 				setTheme(currentTheme === "light" ? "dark" : "light");
 			}
 
-			function updateThemeToggleText() {
+			function updateThemeToggle() {
 				const button = document.getElementById("theme-toggle");
 				const currentTheme = document.documentElement.getAttribute("data-theme");
 				const isSystem = !localStorage.getItem("theme");
 
-				const icon =
-					currentTheme === "dark"
-						? '<path d="M480-280q-83 0-141.5-58.5T280-480q0-83 58.5-141.5T480-680q83 0 141.5 58.5T680-480q0 83-58.5 141.5T480-280ZM80-440q-17 0-28.5-11.5T40-480q0-17 11.5-28.5T80-520h80q17 0 28.5 11.5T200-480q0 17-11.5 28.5T160-440H80Zm720 0q-17 0-28.5-11.5T760-480q0-17 11.5-28.5T800-520h80q17 0 28.5 11.5T920-480q0 17-11.5 28.5T880-440h-80ZM480-760q-17 0-28.5-11.5T440-800v-80q0-17 11.5-28.5T480-920q17 0 28.5 11.5T520-880v80q0 17-11.5 28.5T480-760Zm0 720q-17 0-28.5-11.5T440-80v-80q0-17 11.5-28.5T480-200q17 0 28.5 11.5T520-160v80q0 17-11.5 28.5T480-40ZM226-678l-43-42q-12-11-11.5-28t11.5-29q12-12 29-12t28 12l42 43q11 12 11 28t-11 28q-11 12-27.5 11.5T226-678Zm494 495-42-43q-11-12-11-28.5t11-27.5q11-12 27.5-11.5T734-282l43 42q12 11 11.5 28T777-183q-12 12-29 12t-28-12Zm-42-495q-12-11-11.5-27.5T678-734l42-43q11-12 28-11.5t29 11.5q12 12 12 29t-12 28l-43 42q-12 11-28 11t-28-11ZM183-183q-12-12-12-29t12-28l43-42q12-11 28.5-11t27.5 11q12 11 11.5 27.5T282-226l-42 43q-11 12-28 11.5T183-183Z"/>'
-						: '<path d="M480-120q-151 0-255.5-104.5T120-480q0-138 90-239.5T440-838q13-2 23 3.5t16 14.5q6 9 6.5 21t-7.5 23q-17 26-25.5 55t-8.5 61q0 90 63 153t153 63q31 0 61.5-9t54.5-25q11-7 22.5-6.5T819-479q10 5 15.5 15t3.5 24q-14 138-117.5 229T480-120Z"/>';
-
-				button.innerHTML = `
-                <svg class="icon" viewBox="0 -960 960 960">${icon}</svg>
-                ${isSystem ? '<span style="font-size: 12px; opacity: 0.7">(System)</span>' : ""}
-            `;
+				button.querySelector(".icon-light").style.display =
+					currentTheme === "dark" ? "block" : "none";
+				button.querySelector(".icon-dark").style.display =
+					currentTheme === "light" ? "block" : "none";
 			}
 
-			if (window.matchMedia) {
+			// Initialize theme
+			document.addEventListener("DOMContentLoaded", () => {
+				const savedTheme = localStorage.getItem("theme");
+				const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+					? "dark"
+					: "light";
+				setTheme(savedTheme || systemTheme);
+
+				// Watch for system theme changes
 				window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (event) => {
 					if (!localStorage.getItem("theme")) {
 						setTheme(event.matches ? "dark" : "light");
 					}
 				});
-			}
+			});
 
-			document.addEventListener("DOMContentLoaded", initializeTheme);
-
+			// Table sorting
 			function sortTable(column) {
 				const table = document.querySelector("table");
 				const tbody = table.querySelector("tbody");
 				const rows = Array.from(tbody.querySelectorAll("tr"));
 				const th = table.querySelector(`th:nth-child(${column + 1})`);
-
-				// Get current sort direction or default to ascending
 				const currentSort = th.getAttribute("data-sort") || "none";
 				const newSort = currentSort === "asc" ? "desc" : "asc";
 
-				// Reset all headers
 				table.querySelectorAll("th").forEach((header) => header.removeAttribute("data-sort"));
 				th.setAttribute("data-sort", newSort);
 
-				// Sort rows
 				rows.sort((a, b) => {
-					// Keep parent directory (..) always at top
 					if (a.querySelector(".folder-name")?.textContent === "..") return -1;
 					if (b.querySelector(".folder-name")?.textContent === "..") return 1;
 
 					const aValue = a.cells[column].textContent.trim();
 					const bValue = b.cells[column].textContent.trim();
 
-					// Handle size column specially
 					if (column === 1) {
 						const aSize = parseSizeToBytes(aValue);
 						const bSize = parseSizeToBytes(bValue);
 						return newSort === "asc" ? aSize - bSize : bSize - aSize;
 					}
 
-					// For other columns, use string comparison
 					return newSort === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
 				});
 
-				// Reorder rows
 				rows.forEach((row) => tbody.appendChild(row));
 			}
 
@@ -100,18 +88,43 @@
 	<body>
 		<div class="container">
 			<div class="header">
-				<div style="display: flex; flex-direction: row; gap: 8px; align-items: center">
+				<div class="info">
 					<div class="path">{{.AbsolutePath}}</div>
 					<div class="total-size">Directory Size: <b>{{.TotalSize}}</b></div>
 				</div>
-				<button id="theme-toggle" class="control-button" onclick="toggleTheme()"></button>
+
+				<button id="theme-toggle" onclick="toggleTheme()">
+					<span class="icon-light">{{ svgIcon "light" }}</span>
+					<span class="icon-dark">{{ svgIcon "dark" }}</span>
+				</button>
 			</div>
 			<table>
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Size</th>
-						<th>Modified</th>
+						<th onclick="sortTable(0)">
+							<div class="th-content">
+								<span>Name</span>
+								<div class="sort-indicator">
+									{{ svgIcon "arrow-up" }} {{ svgIcon "arrow-down" }}
+								</div>
+							</div>
+						</th>
+						<th onclick="sortTable(1)">
+							<div class="th-content">
+								<span>Size</span>
+								<div class="sort-indicator">
+									{{ svgIcon "arrow-up" }} {{ svgIcon "arrow-down" }}
+								</div>
+							</div>
+						</th>
+						<th onclick="sortTable(2)">
+							<div class="th-content">
+								<span>Modified</span>
+								<div class="sort-indicator">
+									{{ svgIcon "arrow-up" }} {{ svgIcon "arrow-down" }}
+								</div>
+							</div>
+						</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
@@ -119,14 +132,8 @@
 					{{if ne .CurrentPath "/"}}
 					<tr>
 						<td>
-							<a href="{{.CurrentPath}}/.." class="directory-link">
-								<svg
-									class="icon folder-icon"
-									viewBox="0 -960 960 960"
-									style="width: 20px; height: 20px"
-								>
-									<path d="M480-345 240-585l56-56 184 184 184-184 56 56-240 240Z" />
-								</svg>
+							<a href="{{.CurrentPath}}/.." class="link">
+								{{ svgIcon "home" }}
 								<span class="folder-name">..</span>
 							</a>
 						</td>
@@ -138,29 +145,30 @@
 					<tr>
 						<td>
 							{{if .IsDir}}
-							<a href="{{.Path}}" class="directory-link">
-								<svg
-									class="icon folder-icon"
-									viewBox="0 -960 960 960"
-									style="width: 20px; height: 20px"
-								>
-									<path
-										d="M141-160q-24 0-42-18.5T81-220v-520q0-23 18-41.5t42-18.5h280l60 60h340q23 0 41.5 18.5T881-680v460q0 23-18.5 41.5T821-160H141Z"
-									/>
-								</svg>
+							<a href="{{.Path}}" class="link">
+								{{ svgIcon "folder" }}
 								<span class="folder-name">{{.Name}}</span>
 							</a>
 							{{else}}
-							<span class="table-name-cell">{{.Name}}</span>
+							<span class="file-entry">
+								{{ svgIcon .FileType }}
+								<span>{{.Name}}</span>
+							</span>
 							{{end}}
 						</td>
 						<td>{{.FormattedSize}}</td>
 						<td>{{.ModTime}}</td>
 						<td>
 							{{if .IsDir}}
-							<a href="/zip{{.Path}}" class="button">Download ZIP</a>
+							<a href="/zip{{.Path}}" class="button">
+								{{ svgIcon "zip" }}
+								<span>Download</span>
+							</a>
 							{{else}}
-							<a href="{{.Path}}" class="button" download>Download</a>
+							<a href="{{.Path}}" class="button" download>
+								{{ svgIcon "download" }}
+								<span>Download</span>
+							</a>
 							{{end}}
 						</td>
 					</tr>
