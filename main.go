@@ -26,9 +26,9 @@ type FileInfo struct {
 	Size          int64
 	FormattedSize string
 	ModTime       string
+	FileType      string
 }
 
-// formatSize converts bytes to human-readable format
 func formatSize(bytes int64) string {
 	const unit = 1024
 	if bytes < unit {
@@ -41,6 +41,25 @@ func formatSize(bytes int64) string {
 	}
 	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
+
+func getFileType(filename string) string {
+	ext := strings.ToLower(filepath.Ext(filename))
+	switch ext {
+	case ".mp3", ".wav", ".ogg", ".m4a", ".flac":
+		return "audio"
+	case ".mp4", ".avi", ".mov", ".wmv", ".mkv":
+		return "video"
+	case ".zip", ".rar", ".7z", ".tar", ".gz":
+		return "zip"
+	case ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg":
+		return "image"
+	case ".srt", ".ass", ".vtt", ".sub", ".ssa", ".txt":
+		return "subtitles"
+	default:
+		return "other-media"
+	}
+}
+
 
 // getDirSize calculates total size of a directory
 func getDirSize(path string) (int64, error) {
@@ -136,6 +155,11 @@ func handleFileServer(w http.ResponseWriter, r *http.Request, root string) {
 				}
 			}
 			
+			fileType := "folder"
+			if !file.IsDir() {
+				fileType = getFileType(file.Name())
+			}
+			
 			fileInfos = append(fileInfos, FileInfo{
 				Name:          file.Name(),
 				Path:          filepath.Join(urlPath, file.Name()),
@@ -143,6 +167,7 @@ func handleFileServer(w http.ResponseWriter, r *http.Request, root string) {
 				Size:          size,
 				FormattedSize: formattedSize,
 				ModTime:       info.ModTime().Format("2006-01-02 15:04:05"),
+				FileType:      fileType,
 			})
 		}
 
@@ -153,36 +178,50 @@ func handleFileServer(w http.ResponseWriter, r *http.Request, root string) {
 	http.ServeFile(w, r, fullPath)
 }
 
+// Add this function to main.go
+func loadSVGIcon(name string) (template.HTML, error) {
+    content, err := contentFS.ReadFile(filepath.Join("static/icons", name+".svg"))
+    if err != nil {
+        return "", err
+    }
+    return template.HTML(content), nil
+}
+
+// Add this template function
+var templateFuncs = template.FuncMap{
+    "svgIcon": loadSVGIcon,
+}
 
 func renderTemplate(w http.ResponseWriter, files []FileInfo, urlPath string, absolutePath string) {
-	tmpl, err := template.ParseFS(contentFS, "templates/index.html")
-	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		log.Printf("Template parsing error: %v", err)
-		return
-	}
-	
-	var totalSize int64
-	for _, file := range files {
-		totalSize += file.Size
-	}
-	
-	data := struct {
-		Files         []FileInfo
-		CurrentPath   string
-		AbsolutePath  string
-		TotalSize     string
-	}{
-		Files:         files,
-		CurrentPath:   urlPath,
-		AbsolutePath:  absolutePath,
-		TotalSize:     formatSize(totalSize),
-	}
-	
-	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		log.Printf("Template execution error: %v", err)
-	}
+    tmpl, err := template.New("index.html").Funcs(templateFuncs).ParseFS(contentFS, "templates/index.html")
+    if err != nil {
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        log.Printf("Template parsing error: %v", err)
+        return
+    }
+    
+    // Calculate total size from files
+    var totalSize int64
+    for _, file := range files {
+        totalSize += file.Size
+    }
+    
+    data := struct {
+        Files        []FileInfo
+        CurrentPath  string
+        AbsolutePath string
+        TotalSize    string
+    }{
+        Files:        files,
+        CurrentPath:  urlPath,
+        AbsolutePath: absolutePath,
+        TotalSize:    formatSize(totalSize),
+    }
+    
+    if err := tmpl.Execute(w, data); err != nil {
+        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        log.Printf("Template execution error: %v", err)
+    }
 }
 
 func main() {
@@ -223,12 +262,15 @@ func main() {
 		}
 
 		// Set content type based on file extension
-		if strings.HasSuffix(r.URL.Path, ".css") {
+		switch {
+		case strings.HasSuffix(r.URL.Path, ".css"):
 			w.Header().Set("Content-Type", "text/css")
+		case strings.HasSuffix(r.URL.Path, ".svg"):
+			w.Header().Set("Content-Type", "image/svg+xml")
 		}
 
 		w.Write(file)
-	})
+	})	
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
