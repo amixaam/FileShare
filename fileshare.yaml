@@ -13,4 +13,4 @@ port: "8080"
 dotfiles: true
 
 # Domain to use for links. default: localhost
-domain: lmao
+domain: localhost
