@@ -15,8 +15,8 @@ import (
 	"strings"
 )
 
-//go:embed templates/*
-var templateFS embed.FS
+//go:embed templates/* static/*
+var contentFS embed.FS
 
 // FileInfo stores information about files and directories
 type FileInfo struct {
@@ -153,8 +153,9 @@ func handleFileServer(w http.ResponseWriter, r *http.Request, root string) {
 	http.ServeFile(w, r, fullPath)
 }
 
+
 func renderTemplate(w http.ResponseWriter, files []FileInfo, urlPath string, absolutePath string) {
-	tmpl, err := template.ParseFS(templateFS, "templates/index.html")
+	tmpl, err := template.ParseFS(contentFS, "templates/index.html")
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		log.Printf("Template parsing error: %v", err)
@@ -212,6 +213,23 @@ func main() {
 	}
 
 	// Set up handlers
+
+	// Serve static files (CSS, JS, etc.)
+	http.HandleFunc("/static/", func(w http.ResponseWriter, r *http.Request) {
+		file, err := contentFS.ReadFile(r.URL.Path[1:]) // Remove leading slash
+		if err != nil {
+			http.Error(w, "File not found", http.StatusNotFound)
+			return
+		}
+
+		// Set content type based on file extension
+		if strings.HasSuffix(r.URL.Path, ".css") {
+			w.Header().Set("Content-Type", "text/css")
+		}
+
+		w.Write(file)
+	})
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
 		handleFileServer(w, r, dirPath)
