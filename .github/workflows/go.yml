@@ -65,7 +65,7 @@ jobs:
                   GOARCH: ${{ matrix.arch }}
               run: |
                   output_name="FileShare-${{ matrix.release_name }}-${{ matrix.arch }}${{ matrix.extension }}"
-                  go build -v -o "$output_name" main.go
+                  go build -v -o "$output_name"
                   if [[ "${{ matrix.os }}" == "windows" ]]; then
                     zip "FileShare-${{ matrix.release_name }}-${{ matrix.arch }}.zip" "$output_name"
                   else
