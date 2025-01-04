@@ -199,7 +199,7 @@
 									{{ svgIcon "zip" }}
 								</a>
 								<button class="shell-link tooltip-trigger" onclick="copyShellLink('/zip{{.Path}}', '{{.Name}}', '{{.IsDir}}');">
-									<div class="tooltip"><span id="{{.Name}}">Copy wget download command</span></div>
+									<div class="tooltip"><span id="{{.Name}}">Copy wget command</span></div>
 									{{ svgIcon "shell" }}
 								</button>
 							{{else}}
@@ -208,7 +208,7 @@
 									{{ svgIcon "download" }}
 								</a>
 								<button class="shell-link tooltip-trigger" onclick="copyShellLink('{{.Path}}', '{{.Name}}', '{{.IsDir}}');">
-									<div class="tooltip"><span id="{{.Name}}">Copy wget download command</span></div>
+									<div class="tooltip"><span id="{{.Name}}">Copy wget command</span></div>
 									{{ svgIcon "shell" }}
 								</button>
 							{{end}}
