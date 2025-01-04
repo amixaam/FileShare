@@ -83,6 +83,24 @@
 				if (!matches) return 0;
 				return parseFloat(matches[1]) * units[matches[2]];
 			}
+
+			async function copyShellLink(downloadLink, fileName, zip = 'false') {
+				if(!downloadLink) return;
+
+				console.log(downloadLink);
+				console.log(fileName);
+
+				// Build wget command
+				const domain = window.location.origin;
+				let wgetCommand = `wget "${domain}${downloadLink}" -O "${fileName}${zip === 'true' ? '.zip' : ''}"`;
+
+				// Make sure to get rid of //
+				wgetCommand = wgetCommand.replace(/(?<!:)\/+/g, '/');
+				
+				console.log(wgetCommand)
+				// copy command to clipboard
+				await navigator.clipboard.writeText(wgetCommand);
+			}
 		</script>
 	</head>
 	<body>
@@ -158,17 +176,23 @@
 						</td>
 						<td>{{.FormattedSize}}</td>
 						<td>{{.ModTime}}</td>
-						<td>
+						<td class="actions-container">
 							{{if .IsDir}}
-							<a href="/zip{{.Path}}" class="button">
-								{{ svgIcon "zip" }}
-								<span>Download</span>
-							</a>
+								<a href="/zip{{.Path}}" class="button">
+									{{ svgIcon "zip" }}
+									<span>Download</span>
+								</a>
+								<button class="shell-link" onclick="copyShellLink('/zip{{.Path}}', '{{.Name}}', '{{.IsDir}}');">
+									{{ svgIcon "shell" }}
+								</button>
 							{{else}}
-							<a href="{{.Path}}" class="button" download>
-								{{ svgIcon "download" }}
-								<span>Download</span>
-							</a>
+								<a href="{{.Path}}" class="button" download>
+									{{ svgIcon "download" }}
+									<span>Download</span>
+								</a>
+								<button class="shell-link" onclick="copyShellLink('{{.Path}}', '{{.Name}}', '{{.IsDir}}');">
+									{{ svgIcon "shell" }}
+								</button>
 							{{end}}
 						</td>
 					</tr>

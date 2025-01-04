@@ -1,5 +1,6 @@
 :root {
 	--bg-color: #f5f5f5;
+	--bg-subtle: #1a1a1a05;
 	--container-bg: #ffffff;
 	--text-color: #000000;
 	--border-color: #ddd;
@@ -10,6 +11,7 @@
 
 [data-theme="dark"] {
 	--bg-color: #1a1a1a;
+	--bg-subtle: #ffffff05;
 	--container-bg: #2d2d2d;
 	--text-color: #ffffff;
 	--border-color: #404040;
@@ -80,6 +82,28 @@ tr:hover {
 	background-color: var(--hover-bg);
 }
 
+.actions-container {
+	display: flex;
+	gap: 8px;
+
+	.shell-link {
+		cursor: pointer;
+
+		background-color: var(--bg-subtle);
+		border-radius: 4px;
+				
+		border: 1px solid var(--border-color);
+		outline: none;
+
+		display: grid;
+		place-items: center;
+
+		svg {
+			stroke: var(--text-color);
+		}
+	}
+}
+
 /* Header sorting */
 .th-content {
 	display: flex;
@@ -144,6 +168,7 @@ th[data-sort="desc"] .sort-indicator svg:last-child {
 .button:hover {
 	background-color: #0056b3;
 }
+
 
 /* Icons */
 .icon {
