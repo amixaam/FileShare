@@ -7,6 +7,9 @@
 	--hover-bg: #f8f9fa;
 	--link-color: #0366d6;
 	--shadow-color: rgba(0, 0, 0, 0.1);
+
+	--bg-success: #7DDF75;
+	--border-success: #65B560;
 }
 
 [data-theme="dark"] {
@@ -18,6 +21,9 @@
 	--hover-bg: #363636;
 	--link-color: #58a6ff;
 	--shadow-color: rgba(0, 0, 0, 0.3);
+
+	--bg-success: #70c46a;
+	--border-success: #5da856;
 }
 
 body {
@@ -83,6 +89,7 @@ tr:hover {
 }
 
 .actions-container {
+
 	display: flex;
 	gap: 8px;
 
@@ -165,7 +172,21 @@ th[data-sort="desc"] .sort-indicator svg:last-child {
 	transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.button:hover {
+.button-icon {
+	display: grid;
+	place-items: center;
+
+	width: fit-content;
+	border-radius: 4px;
+	padding: 8px;
+
+	background-color: #007bff;
+	color: white;
+
+	transition: background-color 0.3s ease;
+}
+
+.button:hover, .button-icon:hover {
 	background-color: #0056b3;
 }
 
@@ -187,6 +208,63 @@ th[data-sort="desc"] .sort-indicator svg:last-child {
 
 .button .icon {
 	fill: white;
+}
+
+/* Tooltip classes */
+.tooltip-trigger {
+    position: relative;
+}
+
+.tooltip-trigger:hover .tooltip {
+    opacity: 1; 
+    visibility: visible; 
+    transition-delay: 0.5s; 
+}
+
+.tooltip {
+    opacity: 0; 
+    visibility: hidden; 
+    position: absolute;
+    top: 0;
+    transform: translateY(calc(-100% - 12px));
+    transition: all 150ms ease, visibility 0s 150ms; 
+}
+
+.tooltip span {
+    background-color: var(--hover-bg);
+    color: var(--text-color);
+    white-space: nowrap;
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: large;
+    opacity: 0;
+    transition: opacity 150ms ease; 
+}
+
+.tooltip-trigger:hover .tooltip span {
+    opacity: 1; 
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -8px; 
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 4px solid var(--border-color); 
+}
+
+.tooltip-success span{
+	color: white;
+	background-color: var(--bg-success);
+	border-color: var(--border-success);
+}
+
+.tooltip-success::after {
+    border-top: 4px solid var(--border-success); 
 }
 
 /* Theme toggle */
