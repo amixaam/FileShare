@@ -83,6 +83,40 @@
 				if (!matches) return 0;
 				return parseFloat(matches[1]) * units[matches[2]];
 			}
+
+			async function copyShellLink(downloadLink, fileName, zip = 'false') {
+				if(!downloadLink) return;
+
+				// Build wget command
+				const domain = window.location.origin;
+				let wgetCommand = `wget "${domain}${downloadLink}" -O "${fileName}${zip === 'true' ? '.zip' : ''}"`;
+
+				// Make sure to get rid of //
+				wgetCommand = wgetCommand.replace(/(?<!:)\/+/g, '/');
+				
+				// copy command to clipboard
+				await navigator.clipboard.writeText(wgetCommand);
+
+				// Display copied message, if tooltip exists
+				const tooltip = document.getElementById(fileName);
+				
+				if(tooltip) {
+					// Change text and class
+					const oldText = tooltip.innerText;
+					tooltip.innerText = "Link copied";
+					tooltip.parentElement.classList.add('tooltip-success');
+					
+					// Wait for 1 second and remove the class, and change back the text
+					await sleep(2000);
+					tooltip.innerText = oldText;
+					tooltip.parentElement.classList.remove('tooltip-success');
+				}
+			}
+
+			function sleep(ms) {
+				return new Promise(resolve => setTimeout(resolve, ms));
+			}
+
 		</script>
 	</head>
 	<body>
@@ -158,17 +192,25 @@
 						</td>
 						<td>{{.FormattedSize}}</td>
 						<td>{{.ModTime}}</td>
-						<td>
+						<td class="actions-container">
 							{{if .IsDir}}
-							<a href="/zip{{.Path}}" class="button">
-								{{ svgIcon "zip" }}
-								<span>Download</span>
-							</a>
+								<a href="/zip{{.Path}}" class="button-icon tooltip-trigger">
+									<div class="tooltip"><span>Download folder as zip</span></div>
+									{{ svgIcon "zip" }}
+								</a>
+								<button class="shell-link tooltip-trigger" onclick="copyShellLink('/zip{{.Path}}', '{{.Name}}', '{{.IsDir}}');">
+									<div class="tooltip"><span id="{{.Name}}">Copy wget command</span></div>
+									{{ svgIcon "shell" }}
+								</button>
 							{{else}}
-							<a href="{{.Path}}" class="button" download>
-								{{ svgIcon "download" }}
-								<span>Download</span>
-							</a>
+								<a href="{{.Path}}" class="button-icon tooltip-trigger" download>
+									<div class="tooltip"><span>Download file</span></div>
+									{{ svgIcon "download" }}
+								</a>
+								<button class="shell-link tooltip-trigger" onclick="copyShellLink('{{.Path}}', '{{.Name}}', '{{.IsDir}}');">
+									<div class="tooltip"><span id="{{.Name}}">Copy wget command</span></div>
+									{{ svgIcon "shell" }}
+								</button>
 							{{end}}
 						</td>
 					</tr>
